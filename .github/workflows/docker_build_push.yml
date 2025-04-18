@@ -28,9 +28,16 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/webapp:latest
 
   deploy:
-    needs: dockerbuildpush  # This is how we depend on the previous job
+    needs: dockerbuildpush  # This ensures deploy happens after docker build
     runs-on: ubuntu-latest
     steps:
+      - name: Set up SSH agent
+        run: |
+          eval "$(ssh-agent -s)"
+          echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+          ssh-add private_key.pem
+
       - name: Deploy to AWS EC2
         uses: appleboy/ssh-action@v0.1.1
         with:
